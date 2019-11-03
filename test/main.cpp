@@ -24,27 +24,37 @@ void callback(CMessage &msg, void* arg) {
     CRabbitMQ* mq = (CRabbitMQ*)arg;
 
     /*
-     *
+     * 业务逻辑处理
      */
     printf("wwwww    %s\n", msg.m_data.c_str());
-    mq->publish(msg, AAA_send_EXCHANGE, AAA_send_KEY);
+	// 根据交换机名称和路由键Key名称发送高级消息队列消息
+    mq->publish(msg.m_data, AAA_send_EXCHANGE, AAA_send_KEY);
 }
 
 int main()
 {
+	// 队列对象
     CQueue      queue(CDE_recv_QUEUE);
+	// 接收交换机对象
     CExchange   exchange(CDE_recv_EXCHANGE);
+	// 发送交换机对象
     CExchange   sexchange(CDE_send_EXCHANGE);
 
-    CMessage msg("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-    CRabbitMQ mq(9);
+    // MQ 连接句柄对象
+    CRabbitMQ mq;
+	// 设置 ip，端口，账号等
     mq.setHostIp("192.168.2.37");
     mq.setVHostName("/");
     mq.setPort(5672);
     mq.setUser("admin");
     mq.setPswd("123456");
+	
+	// 定义默认队列，默认接收交换机，绑定队列，设置发送交换机对象
     mq.init(queue, exchange, CDE_recv_KEY, callback, sexchange);
+	// 绑定队列，交换机与路由Key
     mq.bind(CQueue(CDE_send_QUEUE), CExchange(AAA_send_EXCHANGE), AAA_send_KEY);
+    CMessage msg("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+	// 发送消息到指定交换机和路由Key中
     mq.publish(msg, CDE_recv_EXCHANGE, CDE_recv_KEY);
     while(1) {
         sleep(1000);

@@ -79,6 +79,13 @@ int CRabbitMQ::init(const CQueue &recv_queue,
     return 0;
 }
 
+int CRabbitMQ::bind(const string &queueName,
+                    const string &exchangeName,
+                    const string &bind_key)
+{
+    return bind(CQueue(queueName), CExchange(exchangeName), bind_key);
+}
+
 int CRabbitMQ::bind(const CQueue &queue,
                     const CExchange &exchange,
                     const string &bind_key)
@@ -88,6 +95,13 @@ int CRabbitMQ::bind(const CQueue &queue,
         return -6;
     }
     return 0;
+}
+
+int CRabbitMQ::publish(const string &msg,
+                       const string &exchange,
+                       const string &routkey)
+{
+    return m_adapter->publish(CMessage(msg), exchange, routkey);
 }
 
 int CRabbitMQ::publish(const CMessage &message,
@@ -101,17 +115,6 @@ int CRabbitMQ::consumer(const string &QueueName,
                         Func recvMsgFunc)
 {
     return m_adapter->consumer(QueueName, recvMsgFunc);
-}
-
-void* CRabbitMQ::mq_recv(void* param)
-{
-    CRabbitMQ* mq = (CRabbitMQ*)param;
-    string queue_name = mq->m_recvQueue.m_name;
-    if (mq->consumer(queue_name, mq->m_recvMsgFunc)) {
-        std::cout << " mq_recv consumer err\n";
-        return nullptr;
-	}
-    return nullptr;
 }
 
 void CRabbitMQ::setHostIp(const string &hostIp)
@@ -137,4 +140,15 @@ void CRabbitMQ::setUser(const string &user)
 void CRabbitMQ::setPswd(const string &pswd)
 {
     m_adapter->setPswd(pswd);
+}
+
+void* CRabbitMQ::mq_recv(void* param)
+{
+    CRabbitMQ* mq = (CRabbitMQ*)param;
+    string queue_name = mq->m_recvQueue.m_name;
+    if (mq->consumer(queue_name, mq->m_recvMsgFunc)) {
+        std::cout << " mq_recv consumer err\n";
+        return nullptr;
+    }
+    return nullptr;
 }
